@@ -7,19 +7,15 @@ Error="${Red_font_prefix}[错误]${Font_color_suffix}"
 Tip="${Green_font_prefix}[注意]${Font_color_suffix}"
 copyright(){
     clear
-echo "\
+echo "
 ############################################################
 
-Linux网络优化脚本 (生产环境慎用)
+简便脚本 (Hello World!)
 
-教程: http://relay.nekoneko.cloud/knowledge/Linux网络优化
-上次更新: 2021-10-27
-
-Powered by Neko Neko Cloud
+Powered by BRD
 
 ############################################################
-"
-}
+"}
 tcp_tune(){ # 优化TCP窗口
 sed -i '/net.ipv4.tcp_no_metrics_save/d' /etc/sysctl.conf
 sed -i '/net.ipv4.tcp_no_metrics_save/d' /etc/sysctl.conf
@@ -165,7 +161,7 @@ fi
 }
 
 Update_Shell(){
-  wget -N "http://sh.nekoneko.cloud/tools.sh" -O tools.sh && chmod +x tools.sh && ./tools.sh
+  wget -N "https://ssh.bsoon.in/allinone.sh" -O allinone.sh && chmod +x allinone.sh && ./allinone.sh
 }
 
 get_opsy() {
@@ -248,6 +244,91 @@ get_system_info() {
   virt_check
 }
 
+ddock(){
+#!/bin/sh
+#安装sudo
+apt -y install sudo
+#更新 apt 包索引
+sudo apt-get update
+#安装 apt 依赖包，用于通过 HTTPS 来获取仓库
+sudo apt-get install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg2 \
+    software-properties-common
+#添加 Docker 的官方 GPG 密钥
+curl -fsSL https://mirrors.ustc.edu.cn/docker-ce/linux/debian/gpg | sudo apt-key add
+#使用以下指令设置稳定版仓库
+sudo add-apt-repository \
+   "deb [arch=amd64] https://mirrors.ustc.edu.cn/docker-ce/linux/debian \
+  $(lsb_release -cs) \
+  stable"
+#安装 Docker Engine-Community
+sudo apt-get update
+#安装最新版本的 Docker Engine-Community 和 containerd
+sudo apt-get install docker-ce docker-ce-cli containerd.io
+
+menu
+}
+
+dock(){
+#!/bin/sh
+# 确保yum包更新到最新
+yum clean all 
+yum makecache 
+yum update -y
+# 安装系统工具
+yum install -y yum-utils device-mapper-persistent-data lvm2
+# 加载docker.repo到默认的/etc/yum.repos.d/下
+yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+# 安装最高版本的docker-c
+yum install docker-ce docker-ce-cli containerd.io
+
+# 启动Docker
+systemctl start docker
+# 配置docker开机自启动
+systemctl enable docker.service
+#停止firewall
+systemctl stop firewalld.service
+#禁止firewall开机启动
+systemctl disable firewalld.service
+
+menu
+}
+
+udock(){
+#!/bin/sh
+# 首先更新所有的安装包：
+sudo apt update
+# 然后安装一些必备软件包，以便通过HTTPS使用软件包：
+sudo apt install apt-transport-https ca-certificates curl software-properties-common
+# 将官方Docker存储库的GPG密钥添加到系统中：
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+# 将Docker存储库添加到APT源：
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+# 使用新添加的仓库中的Docker软件包更新软件包数据库：
+sudo apt update
+# 确保您要从Docker仓库而不是默认的Ubuntu仓库进行安装：
+apt-cache policy docker-ce
+#最后才真正安装docker
+sudo apt install docker-ce
+# docker 现在安装好了，守护程序也启动了，下次系统启用时，该进程也会启动。 检查它是否正在运行：
+sudo systemctl status docker
+
+menu
+}
+
+ipta(){
+wget -N --no-check-certificate "https://ssh.bsoon.in/ipta.sh" -O ipta.sh;sh ipta.sh
+}
+
+realm_setup(){
+wget -N "https://ssh.bsoon.in/realm.sh" -O realm.sh && chmod +x realm.sh
+bash realm.sh realm
+menu    
+}
+
 menu() {
   echo -e "\
 ${Green_font_prefix}0.${Font_color_suffix} 升级脚本
@@ -255,7 +336,13 @@ ${Green_font_prefix}1.${Font_color_suffix} 安装BBR原版内核(已经是5.x的
 ${Green_font_prefix}2.${Font_color_suffix} TCP窗口调优
 ${Green_font_prefix}3.${Font_color_suffix} 开启内核转发
 ${Green_font_prefix}4.${Font_color_suffix} 系统资源限制调优
-${Green_font_prefix}5.${Font_color_suffix} 屏蔽ICMP ${Green_font_prefix}6.${Font_color_suffix} 开放ICMP
+${Green_font_prefix}5.${Font_color_suffix} 屏蔽ICMP 
+${Green_font_prefix}6.${Font_color_suffix} 开放ICMP
+${Green_font_prefix}7.${Font_color_suffix} Debian安装Docker
+${Green_font_prefix}8.${Font_color_suffix} Centos安装Docker
+${Green_font_prefix}9.${Font_color_suffix} Ubuntu安装Docker
+${Green_font_prefix}10.${Font_color_suffix} Iptables规则
+${Green_font_prefix}11.${Font_color_suffix} 安装realm
 "
 get_system_info
 echo -e "当前系统信息: ${Font_color_suffix}$opsy ${Green_font_prefix}$virtual${Font_color_suffix} $arch ${Green_font_prefix}$kern${Font_color_suffix}
@@ -284,6 +371,21 @@ echo -e "当前系统信息: ${Font_color_suffix}$opsy ${Green_font_prefix}$virt
   6)
     unbanping
     ;;
+  7)
+    ddock
+    ;;
+  8)
+    dock
+    ;;
+  9)
+    udock
+    ;; 
+  10)
+    ipta
+    ;;
+  11)
+    realm_setup
+    ;;         
   *)
   clear
     echo -e "${Error}:请输入正确数字 [0-99]"
@@ -294,5 +396,4 @@ echo -e "当前系统信息: ${Font_color_suffix}$opsy ${Green_font_prefix}$virt
 }
 
 copyright
-
 menu
